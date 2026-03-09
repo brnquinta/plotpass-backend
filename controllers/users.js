@@ -4,6 +4,54 @@ const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = process.env;
 
 
+
+
+// GET /users
+module.exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (err) {
+    res.status(500).send({ message: "Erro no servidor" });
+  }
+};
+
+
+// GET /users/:id
+module.exports.getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).orFail();
+
+    res.send(user);
+  } catch (err) {
+    if (err.name === "DocumentNotFoundError") {
+      return res.status(404).send({ message: "Usuário não encontrado" });
+    }
+
+    if (err.name === "CastError") {
+      return res.status(400).send({ message: "ID inválido" });
+    }
+
+    return res.status(500).send({ message: "Erro no servidor" });
+  }
+};
+
+// GET /users/me
+
+module.exports.getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).orFail();
+    res.send(user);
+  } catch (err) {
+    if (err.name === "DocumentNotFoundError") {
+      return res.status(404).send({ message: "Usuário não encontrado" });
+    }
+
+    return res.status(500).send({ message: "Erro no servidor" });
+  }
+};
+
+
 // POST /signup
 module.exports.createUser = async (req, res) => {
   try {
