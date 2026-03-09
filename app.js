@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const usersRouter = require("./routes/users");
+const recommendationsRouter = require("./routes/recommendations");
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/users", usersRouter);
+app.use("/recommendations", recommendationsRouter);
 
 const PORT = process.env.PORT || 3000;
 
