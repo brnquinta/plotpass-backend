@@ -2,6 +2,11 @@ const router = require("express").Router();
 const auth = require("../middlewares/auth");
 
 const {
+  validateCreateRecommendation,
+  validateRecommendationId,
+} = require("../middlewares/validator");
+
+const {
   getReceivedRecommendations,
   getSentRecommendations,
   getRecommendationById,
@@ -9,12 +14,19 @@ const {
   markRecommendationAsRead,
 } = require("../controllers/recommendations");
 
-router.use(auth); 
+/* recomendações recebidas */
+router.get("/received", auth, getReceivedRecommendations);
 
-router.get("/received", getReceivedRecommendations);
-router.get("/sent", getSentRecommendations);
-router.get("/:recommendationId", getRecommendationById);
-router.post("/", createRecommendation);
-router.patch("/:recommendationId/read", markRecommendationAsRead);
+/* recomendações enviadas */
+router.get("/sent", auth, getSentRecommendations);
+
+/* recomendação específica */
+router.get("/:recommendationId", auth, validateRecommendationId, getRecommendationById);
+
+/* criar recomendação */
+router.post("/", auth, validateCreateRecommendation, createRecommendation);
+
+/* marcar recomendação como lida */
+router.patch("/:recommendationId/read", auth, validateRecommendationId, markRecommendationAsRead);
 
 module.exports = router;
