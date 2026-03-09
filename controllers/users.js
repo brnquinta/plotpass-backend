@@ -1,0 +1,67 @@
+const User = require("../models/user");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = process.env;
+
+
+// POST /signup
+module.exports.createUser = async (req, res) => {
+  try {
+    const { name, avatar, email, password } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(201).send({
+      _id: user._id,
+      name: user.name,
+      avatar: user.avatar,
+      email: user.email,
+    });
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).send({ message: "Erro de validação" });
+    }
+
+    if (err.code === 11000) {
+      return res.status(409).send({ message: "Não foi possível criar o usuário" });
+    }
+
+    return res.status(500).send({ message: "Erro no servidor" });
+  }
+}; 
+
+// POST /signin
+module.exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return res.status(401).send({ message: "Email ou senha incorretos" });
+    }
+
+    const matched = await bcrypt.compare(password, user.password);
+
+    if (!matched) {
+      return res.status(401).send({ message: "Email ou senha incorretos" });
+    }
+
+    const token = jwt.sign(
+      { _id: user._id },
+      JWT_SECRET, 
+      { expiresIn: "7d" }
+    );
+
+    return res.send({ token });
+  } catch (err) {
+    return res.status(500).send({ message: "Erro no servidor" });
+  }
+};
