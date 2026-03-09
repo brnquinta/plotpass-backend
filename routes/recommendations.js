@@ -14,19 +14,29 @@ const {
   markRecommendationAsRead,
 } = require("../controllers/recommendations");
 
-/* recomendações recebidas */
+// recomendações recebidas
 router.get("/received", auth, getReceivedRecommendations);
 
-/* recomendações enviadas */
+// recomendações enviadas
 router.get("/sent", auth, getSentRecommendations);
 
-/* recomendação específica */
-router.get("/:recommendationId", auth, validateRecommendationId, getRecommendationById);
+// recomendação específica
+router.get(
+  "/:recommendationId",
+  auth,
+  validateRecommendationId,
+  getRecommendationById
+);
 
-/* criar recomendação */
+// criar recomendação
 router.post("/", auth, validateCreateRecommendation, createRecommendation);
 
-/* marcar recomendação como lida */
-router.patch("/:recommendationId/read", auth, validateRecommendationId, markRecommendationAsRead);
+// marcar recomendação como lida
+router.patch(
+  "/:recommendationId/read",
+  auth,
+  validateRecommendationId,
+  markRecommendationAsRead
+);
 
 module.exports = router;

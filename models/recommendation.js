@@ -44,7 +44,7 @@ const recommendationSchema = new mongoose.Schema(
       required: true,
       minlength: 2,
       maxlength: 500,
-        trim: true,
+      trim: true,
     },
     movie: {
       type: movieSchema,
@@ -61,4 +61,4 @@ const recommendationSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("recommendation", recommendationSchema);
+module.exports = mongoose.model("Recommendation", recommendationSchema);

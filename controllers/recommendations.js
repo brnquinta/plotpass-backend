@@ -2,7 +2,7 @@ const Recommendation = require("../models/recommendation");
 const User = require("../models/user");
 
 // GET /recommendations/received
-module.exports.getReceivedRecommendations = async (req, res) => {
+module.exports.getReceivedRecommendations = async (req, res, next) => {
   try {
     const recommendations = await Recommendation.find({
       toUserId: req.user._id,
@@ -12,12 +12,12 @@ module.exports.getReceivedRecommendations = async (req, res) => {
 
     return res.send(recommendations);
   } catch (err) {
-    return res.status(500).send({ message: "Erro no servidor" });
+    return next(err);
   }
 };
 
 // GET /recommendations/sent
-module.exports.getSentRecommendations = async (req, res) => {
+module.exports.getSentRecommendations = async (req, res, next) => {
   try {
     const recommendations = await Recommendation.find({
       fromUserId: req.user._id,
@@ -27,13 +27,12 @@ module.exports.getSentRecommendations = async (req, res) => {
 
     return res.send(recommendations);
   } catch (err) {
-    console.log("Erro getReceivedRecommendations:", err);
-    return res.status(500).send({ message: "Erro no servidor" });
+    return next(err);
   }
 };
 
 // GET /recommendations/:recommendationId
-module.exports.getRecommendationById = async (req, res) => {
+module.exports.getRecommendationById = async (req, res, next) => {
   try {
     const recommendation = await Recommendation.findById(
       req.params.recommendationId
@@ -60,31 +59,21 @@ module.exports.getRecommendationById = async (req, res) => {
       return res.status(400).send({ message: "ID inválido" });
     }
 
-    return res.status(500).send({ message: "Erro no servidor" });
+    return next(err);
   }
 };
 
 // POST /recommendations
-module.exports.createRecommendation = async (req, res) => {
+module.exports.createRecommendation = async (req, res, next) => {
   try {
     const { toUserEmail, reason, movie } = req.body;
-
-    if (!toUserEmail || !reason || !movie) {
-      return res.status(400).send({
-        message: "toUserEmail, reason e movie são obrigatórios",
-      });
-    }
-
-    if (!movie.id || !movie.title) {
-      return res.status(400).send({
-        message: "Dados do filme inválidos",
-      });
-    }
 
     const toUser = await User.findOne({ email: toUserEmail });
 
     if (!toUser) {
-      return res.status(404).send({ message: "Usuário destinatário não encontrado" });
+      return res
+        .status(404)
+        .send({ message: "Usuário destinatário não encontrado" });
     }
 
     if (String(toUser._id) === String(req.user._id)) {
@@ -100,24 +89,30 @@ module.exports.createRecommendation = async (req, res) => {
       movie: {
         id: movie.id,
         title: movie.title,
-        poster_path: movie.poster_path,
-        vote_average: movie.vote_average,
-        release_date: movie.release_date,
+        poster_path: movie.poster_path || "",
+        vote_average: movie.vote_average ?? 0,
+        release_date: movie.release_date || "",
       },
     });
 
-    return res.status(201).send(recommendation);
+    const populatedRecommendation = await Recommendation.findById(
+      recommendation._id
+    )
+      .populate("fromUserId", "name email avatar")
+      .populate("toUserId", "name email avatar");
+
+    return res.status(201).send(populatedRecommendation);
   } catch (err) {
     if (err.name === "ValidationError") {
       return res.status(400).send({ message: "Erro de validação" });
     }
 
-    return res.status(500).send({ message: "Erro no servidor" });
+    return next(err);
   }
 };
 
 // PATCH /recommendations/:recommendationId/read
-module.exports.markRecommendationAsRead = async (req, res) => {
+module.exports.markRecommendationAsRead = async (req, res, next) => {
   try {
     const recommendation = await Recommendation.findById(
       req.params.recommendationId
@@ -142,6 +137,6 @@ module.exports.markRecommendationAsRead = async (req, res) => {
       return res.status(400).send({ message: "ID inválido" });
     }
 
-    return res.status(500).send({ message: "Erro no servidor" });
+    return next(err);
   }
 };
